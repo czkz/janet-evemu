@@ -1,11 +1,11 @@
-(import ./evemu)
+(import ./evemu/device :as evemu-device)
 
 # Get a similar description with evemu-describe
 # The first line is mandatory
 (def- device-desc
   (->>
     ``# EVEMU 1.3
-    N: janet input device
+    N: Janet input device
     I: 0003 4711 0815 0001
     P: 00 00 00 00 00 00 00 00
     B: 00 0b 00 00 00 00 00 00 00
@@ -24,6 +24,9 @@
     (mapcat |[$ "\n"])
     (string/join)))
 
-(def device (evemu/make-device device-desc))
+(def device
+  ``Input device that is capable of emitting
+  both keyboard and mouse events.``
+  (evemu-device/new device-desc))
 
 (comment (-> (device :process) :kill :wait))

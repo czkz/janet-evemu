@@ -1,18 +1,19 @@
-(import ./evemu)
-(import ./cmd-gen)
-(use ./input-device)
+(import ./evemu/event :as evemu-event)
+(import ./evemu/keyconv)
+(import ./cmd-queue)
+(import ./input-device)
 
 (var *delay*
   "Delay in seconds after each keyboard event."
   0)
 
-(defn- eval-cmds
-  [device cmds]
-  (each [key state] cmds
+(defn- eval-cmd-queue
+  [device cmd-q]
+  (each [key state] cmd-q
     (if (= :sleep key)
       (ev/sleep state)
       (do
-        (evemu/event device "EV_KEY" key state true)
+        (evemu-event/emit device "EV_KEY" (keyconv/kw->code key) (if state "1" "0") true)
         (ev/sleep *delay*)))))
 
 (defn type
@@ -26,10 +27,10 @@
 
   * [:ctrl [:c :v]] -- type two keys while holding :ctrl
 
-  * 2.5 -- sleep for 2.5 seconds
+  * 2.5 -- wait for 2.5 seconds
   ``
   [& args]
-  (eval-cmds device (cmd-gen/parse ;args)))
+  (eval-cmd-queue input-device/device (cmd-queue/parse ;args)))
 
 # Probably not useful
 (comment
@@ -39,7 +40,7 @@
     (map
       |(:set-key cmd-buf $ false)
       args)
-    (eval-cmds device cmd-buf)))
+    (eval-cmd-queue input-device/device cmd-buf)))
 
 (comment
   (do
@@ -57,4 +58,4 @@
 
   (do
     (ev/sleep 2)
-    (type ``abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890!@)))#$%^&*()-=_+`~[]{}\|;':",./<>?``)))
+    (type "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890!@#$%^&*()-=_+`~[]{}\\|;':\",./<>?")))

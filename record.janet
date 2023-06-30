@@ -1,8 +1,9 @@
 (import ./mouse)
 (import ./kb)
-(import ./event-monitor)
+(import ./evemu/record :as evemu-record)
+(import ./evemu/keyconv)
 
-(defn- pick-x11 []
+(defn- get-cursor-pos []
   "Returns normalized mouse coords as per XWayland."
   (defn get-lines [& args]
     (->> (with [p (os/spawn args :px {:out :pipe :err :pipe})]
@@ -36,7 +37,7 @@
 
 (defn mouse-pos []
   "Set mouse position to where it is right now."
-  [(find-sym mouse/to) ;(pick-x11)])
+  [(find-sym mouse/to) ;(get-cursor-pos)])
 
 (def- code->kw
   {"BTN_LEFT" :left
@@ -46,8 +47,8 @@
 (defn mouse-click []
   "Repeat the next mouse click."
   (def key
-    (code->kw (event-monitor/wait-for :down "BTN_LEFT" "BTN_RIGHT")))
-  [(find-sym mouse/at) ;(pick-x11) ;(if (= key "BTN_RIGHT") [:right] [])])
+    (code->kw (evemu-record/wait-for :down "BTN_LEFT" "BTN_RIGHT")))
+  [(find-sym mouse/at) ;(get-cursor-pos) ;(if (= key "BTN_RIGHT") [:right] [])])
 
 (defn mouse-events []
   "Record mouse clicks until :esc is pressed."
@@ -60,14 +61,14 @@
          (ev-filter-keys c)
          (= v "1")))
   (def func (find-sym mouse/at))
-  (with [mon (event-monitor/make-listener ev-filter)]
+  (with [mon (evemu-record/make-listener ev-filter)]
     (def cmds @[])
     (forever
       (def ev (:read mon))
       (def kw (code->kw (ev 1)))
       (when (= (ev 1) "KEY_ESC") (break))
       (def cmd
-        (tuple func ;(pick-x11) ;(if (= kw :left) [] [kw])))
+        (tuple func ;(get-cursor-pos) ;(if (= kw :left) [] [kw])))
       (array/push cmds cmd))
     (tuple 'do ;cmds)))
 

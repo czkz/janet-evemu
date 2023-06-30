@@ -34,9 +34,9 @@
     :S+ (some :S)})
 
 (defn make-device-listener
-  [device &opt ev-filter]
+  [device-path &opt ev-filter]
   (default ev-filter (fn [&] true))
-  (def p (os/spawn ["evemu-record" device] :p {:out :pipe}))
+  (def p (os/spawn ["evemu-record" device-path] :p {:out :pipe}))
   (def read (make-line-reader (p :out)))
   (defn event-read []
     (var ret nil)
@@ -51,6 +51,7 @@
    :read (fn [self] (event-read))})
 
 (defn make-listener
+  "Listen for events on all devices."
   [&opt ev-filter]
   (default ev-filter (fn [&] true))
   (def devices
@@ -75,6 +76,7 @@
    :read read})
   
 (defn wait-for
+  "Wait for a key :down or :up on any device."
   [state & keys]
   (assert ({:down 1 :up 1} state))
   (defn ev-filter
