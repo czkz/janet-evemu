@@ -54,7 +54,8 @@
      :pgup "KEY_PAGEUP"
      :pgdown "KEY_PAGEDOWN"
      :lmb "BTN_LEFT"
-     :rmb "BTN_RIGHT"}))
+     :rmb "BTN_RIGHT"
+     :mmb "BTN_MIDDLE"}))
 
 (def code->kw
   (->> kw->code

@@ -33,7 +33,7 @@
     :str (/ ':S+ ,string)
     :S+ (some :S)})
 
-(defn make-listener
+(defn make-device-listener
   [device &opt ev-filter]
   (default ev-filter (fn [&] true))
   (def p (os/spawn ["evemu-record" device] :p {:out :pipe}))
@@ -50,8 +50,9 @@
   {:close (fn [self] (:kill p true))
    :read (fn [self] (event-read))})
 
-(defn make-global-listener
-  [ev-filter]
+(defn make-listener
+  [&opt ev-filter]
+  (default ev-filter (fn [&] true))
   (def devices
     (let
       [dir "/dev/input/"
@@ -60,7 +61,7 @@
                (os/dir dir))]
       (map |(string dir $) names)))
   (def listeners
-    (map |(make-listener $ ev-filter) devices))
+    (map |(make-device-listener $ ev-filter) devices))
   (def ch (ev/chan))
   (defn read [&]
     (ev/take ch))
@@ -73,20 +74,6 @@
   {:close close
    :read read})
   
-  
-# (when (= ev ["EV_KEY" "BTN_LEFT" 0]))})
-
-(comment
-  (defn wait-for
-    [key]
-    (defn ev-filter
-      [t c v]
-      (and (= t "EV_KEY")
-           (= c key)
-           (= v "0")))
-    (with [l (make-listener *kb-device* ev-filter)]
-      (get (:read l) 1))))
-
 (defn wait-for
   [state & keys]
   (assert ({:down 1 :up 1} state))
@@ -95,7 +82,7 @@
     (and (= t "EV_KEY")
          (find |(= c $) keys)
          (= v (if (= state :down) "1" "0"))))
-  (with [l (make-global-listener ev-filter)]
+  (with [l (make-listener ev-filter)]
     (get (:read l) 1)))
 
 (comment
