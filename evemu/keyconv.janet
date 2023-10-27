@@ -40,8 +40,14 @@
       (->> all-keycode-names
            (map |(string "KEY_" $))))
     {:ctrl "KEY_LEFTCTRL"
+     :lctrl "KEY_LEFTCTRL"
+     :rctrl "KEY_RIGHTCTRL"
      :alt "KEY_LEFTALT"
+     :lalt "KEY_LEFTALT"
+     :ralt "KEY_RIGHTALT"
      :shift "KEY_LEFTSHIFT"
+     :lshift "KEY_LEFTSHIFT"
+     :rshift "KEY_RIGHTSHIFT"
      :meta "KEY_LEFTMETA"
      :win "KEY_LEFTMETA"
      :del "KEY_DELETE"
@@ -51,7 +57,12 @@
      :pgdown "KEY_PAGEDOWN"
      :lmb "BTN_LEFT"
      :rmb "BTN_RIGHT"
-     :mmb "BTN_MIDDLE"}))
+     :mmb "BTN_MIDDLE"
+     :mouse1 "BTN_LEFT"
+     :mouse2 "BTN_RIGHT"
+     :mouse3 "BTN_MIDDLE"
+     :mouse4 "BTN_SIDE"
+     :mouse5 "BTN_EXTRA"}))
 
 (def code->kw
   (->> kw->code

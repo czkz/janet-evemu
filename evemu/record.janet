@@ -52,40 +52,30 @@
 
 (defn make-listener
   "Listen for events on all devices."
-  [&opt ev-filter]
+  [dev-filter ev-filter]
   (default ev-filter (fn [&] true))
+  (default dev-filter (fn [path] true))
   (def devices
-    (let
-      [dir "/dev/input/"
-       names (filter
-               |(peg/match '(* "event" :d+ -1) $)
-               (os/dir dir))]
-      (map |(string dir $) names)))
+    (let [dir "/dev/input/"
+          names (filter
+                  |(peg/match '(* "event" :d+ -1) $)
+                  (os/dir dir))
+          paths (map |(string dir $) names)]
+      (filter dev-filter paths)))
   (def listeners
     (map |(make-device-listener $ ev-filter) devices))
   (def ch (ev/chan))
   (defn read [&]
     (ev/take ch))
+  (def fibs
+    (map
+      |(ev/spawn
+         (protect
+           (forever
+             (ev/give ch (:read $)))))
+      listeners))
   (defn close [&]
-    (each l listeners (:close l)))
-  (each l listeners
-    (ev/spawn
-      (forever
-        (ev/give ch (:read l)))))
+    (each l listeners (:close l))
+    (each fib fibs (ev/cancel fib "close")))
   {:close close
    :read read})
-  
-(defn wait-for
-  "Wait for a key :down or :up on any device."
-  [state & keys]
-  (assert ({:down 1 :up 1} state))
-  (defn ev-filter
-    [t c v]
-    (and (= t "EV_KEY")
-         (find |(= c $) keys)
-         (= v (if (= state :down) "1" "0"))))
-  (with [l (make-listener ev-filter)]
-    (get (:read l) 1)))
-
-(comment
-  (wait-for :down "BTN_LEFT" "BTN_RIGHT"))

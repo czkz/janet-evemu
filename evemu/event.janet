@@ -27,11 +27,9 @@
   nil)
 
 # Worse than when the last event has --sync
-(comment
-  (defn- sync [device]
-    (def events (device :pending-events))
-    (unless (empty? events)
-      (each process events (:wait process))
-      (:wait (spawn-evemu-event (device :path) true "0" "0" "0"))
-      (array/clear events))))
+(defn sync [device]
+  "Sync any unsynced events."
+  (unless (empty? (device :pending-events))
+    (wait-for-unsynced device)
+    (:wait (spawn-evemu-event (device :path) true "0" "0" "0"))))
 

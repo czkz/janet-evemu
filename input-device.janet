@@ -29,4 +29,8 @@
   both keyboard and mouse events.``
   (evemu-device/new device-desc))
 
+(defn exclude-filter [path]
+  "Accept all devices except for input-device."
+  (not= path (device :path)))
+
 (comment (-> (device :process) :kill :wait))
