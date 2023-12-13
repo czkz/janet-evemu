@@ -29,7 +29,7 @@
     (print-code
       (doc kb/type)
       (doc mouse/at))
-    (print "Examples:")
+    (print "\nExamples:")
     (print-code
       (kb/type 0.5 "Hello")
       (mouse/at 0.5 0.5 :right))
