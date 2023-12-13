@@ -24,13 +24,21 @@
     (mapcat |[$ "\n"])
     (string/join)))
 
-(def device
+(var- device-mutex (ev/chan 1))
+(var- device-var nil)
+
+(defn device []
   ``Input device that is capable of emitting
   both keyboard and mouse events.``
-  (evemu-device/new device-desc))
+  (ev/give device-mutex nil)
+  (when (nil? device-var)
+    (set device-var
+      (evemu-device/new device-desc)))
+  (ev/take device-mutex)
+  device-var)
 
 (defn exclude-filter [path]
   "Accept all devices except for input-device."
-  (not= path (device :path)))
+  (not= path ((device) :path)))
 
-(comment (-> (device :process) :kill :wait))
+(comment (-> ((device) :process) :kill :wait))

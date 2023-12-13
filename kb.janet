@@ -39,7 +39,7 @@
   * 2.5 -- wait for 2.5 seconds
   ``
   [& args]
-  (eval-cmd-queue input-device/device (cmd-queue/parse ;args)))
+  (eval-cmd-queue (input-device/device) (cmd-queue/parse ;args)))
 
 # Probably not useful
 (comment
@@ -49,7 +49,7 @@
     (map
       |(:set-key cmd-buf $ false)
       args)
-    (eval-cmd-queue input-device/device cmd-buf)))
+    (eval-cmd-queue (input-device/device) cmd-buf)))
 
 (defn- on*
   [key state func]
