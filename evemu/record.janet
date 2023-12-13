@@ -33,11 +33,22 @@
     :str (/ ':S+ ,string)
     :S+ (some :S)})
 
+# Starting 2 instances of evemu-record at the
+# same time produces "this device is grabbed" error.
+# We wait until the first one outputs some data
+# before starting the second one.
+(def- spawn-mutex (ev/chan 1))
+
 (defn make-device-listener
   [device-path &opt ev-filter]
   (default ev-filter (fn [&] true))
+  (ev/give spawn-mutex nil)
   (def p (os/spawn ["evemu-record" device-path] :p {:out :pipe}))
   (def read (make-line-reader (p :out)))
+  # evemu-record outputs useless data at first,
+  # so this (read) should be fine.
+  (read)
+  (ev/take spawn-mutex)
   (defn event-read []
     (var ret nil)
     (while (def line (read))
