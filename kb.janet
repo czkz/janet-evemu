@@ -28,7 +28,7 @@
 (defn type
   ``Simulate keyboard input.
 
-  * "Hello, World!\n" -- type a string, using shift when nessessary
+  * "Hello, World!\\n" -- type a string, using shift when nessessary
 
   * :enter -- type a key
 
