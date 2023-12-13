@@ -53,10 +53,11 @@
 
 (defn- on*
   [key state func]
-  (with [waiter (event-monitor/make-waiter state key)]
-    (forever
-      (:wait waiter)
-      (func))))
+  (ev/spawn
+    (with [waiter (event-monitor/make-waiter state key)]
+      (forever
+        (:wait waiter)
+        (func)))))
 
 (defn- spawn-runner
   [func err-sym]
@@ -75,34 +76,37 @@
 
 (defn- toggle-on*
   [key func]
-  (with [waiter (event-monitor/make-waiter :down key)]
-    (def err-sym (gensym))
-    (forever
-      (:wait waiter)
-      (def fib (spawn-runner func err-sym))
-      (:wait waiter)
-      (ev/cancel fib err-sym))))
+  (ev/spawn
+    (with [waiter (event-monitor/make-waiter :down key)]
+      (def err-sym (gensym))
+      (forever
+        (:wait waiter)
+        (def fib (spawn-runner func err-sym))
+        (:wait waiter)
+        (ev/cancel fib err-sym)))))
 
 (defn- while-held*
   [key func]
-  (with [waiter-down (event-monitor/make-waiter :down key)]
-    (with [waiter-up (event-monitor/make-waiter :up key)]
-      (def err-sym (gensym))
-      (forever
-        (:wait waiter-down)
-        (def fib (spawn-runner func err-sym))
-        (:wait waiter-up)
-        (ev/cancel fib err-sym)))))
+  (ev/spawn
+    (with [waiter-down (event-monitor/make-waiter :down key)]
+      (with [waiter-up (event-monitor/make-waiter :up key)]
+        (def err-sym (gensym))
+        (forever
+          (:wait waiter-down)
+          (def fib (spawn-runner func err-sym))
+          (:wait waiter-up)
+          (ev/cancel fib err-sym))))))
 
 (defn- on-pair*
   [key on-down on-up]
-  (with [waiter-down (event-monitor/make-waiter :down key)]
-    (with [waiter-up (event-monitor/make-waiter :up key)]
-      (forever
-        (:wait waiter-down)
-        (on-down)
-        (:wait waiter-up)
-        (on-up)))))
+  (ev/spawn
+    (with [waiter-down (event-monitor/make-waiter :down key)]
+      (with [waiter-up (event-monitor/make-waiter :up key)]
+        (forever
+          (:wait waiter-down)
+          (on-down)
+          (:wait waiter-up)
+          (on-up))))))
 
 (defmacro on
   "Evaluate body each time the key is pressed."
