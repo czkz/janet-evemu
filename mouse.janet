@@ -39,6 +39,18 @@
   (to x y)
   (click button))
 
+(defn scroll-up
+  "Scroll mouse wheel up once."
+  []
+  (evemu-event/emit (device) "EV_REL" "REL_WHEEL" "1" true)
+  (ev/sleep *delay*))
+
+(defn scroll-down
+  "Scroll mouse wheel down once."
+  []
+  (evemu-event/emit (device) "EV_REL" "REL_WHEEL" "-1" true)
+  (ev/sleep *delay*))
+
 # These don't always work as expected
 (defn down
   "Press and hold the :left or :right mouse button."
