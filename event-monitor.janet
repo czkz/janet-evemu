@@ -2,22 +2,23 @@
 (import ./evemu/keyconv)
 (import ./input-device)
 
-(defn get-cursor-pos []
-  "Returns normalized mouse coords as per XWayland."
-  (defn get-lines [& args]
-    (->> (with [p (os/spawn args :px {:out :pipe :err :pipe})]
-           (:read (p :out) :all))
-         (string/trimr)
-         (string/split "\n")
-         (map string/trim)))
-  (def resolution
-    (->>
-      (get-lines "xrandr")
-      first
-      (string/split ", ")
-      (keep |(peg/match '(* "current " ':d+ " x " ':d+ -1) $))
-      (mapcat identity)
-      (map scan-number)))
+(defn- get-lines [& args]
+  (->> (with [p (os/spawn args :px {:out :pipe :err :pipe})]
+         (:read (p :out) :all))
+       (string/trimr)
+       (string/split "\n")
+       (map string/trim)))
+
+(defn- get-cursor-pos-xdotool []
+  "Works on both X11 and XWayland, but needs xdotool."
+  (->>
+    (get-lines "xdotool" "getmouselocation")
+    first
+    (peg/match '(* "x:" ':d+ " y:" ':d+))
+    (map scan-number)))
+
+(defn- get-cursor-pos-xinput []
+  "Only works on XWayland."
   (def pointer-id
     (->>
       (get-lines "xinput" "list" "--name-only")
@@ -29,6 +30,21 @@
       (keep |(peg/match '(* "valuator[" (set "01") "]=" ':d+ -1) $))
       (mapcat identity)
       (map scan-number)))
+  pos)
+
+(defn get-cursor-pos []
+  "Returns normalized mouse coords."
+  (def resolution
+    (->>
+      (get-lines "xrandr")
+      first
+      (string/split ", ")
+      (keep |(peg/match '(* "current " ':d+ " x " ':d+ -1) $))
+      (mapcat identity)
+      (map scan-number)))
+  (def pos
+    (try (get-cursor-pos-xdotool)
+      ([err fib] (get-cursor-pos-xinput))))
   (map / pos resolution))
 
 (defn make-waiter
